@@ -1014,11 +1014,11 @@ app.get('/hrViewMissingHoursMissingDays', verify, async (req, res) => {
 });
 
 //View any staff member attendance record
-app.get("/hrViewAttendance", verify, async (req, res) => {
+app.post("/hrViewAttendance", verify, async (req, res) => {
     let staffRole = req.staff.role;
     if (staffRole == "HR") {
         if(typeof req.body.username !== 'string'){
-            return res.send("Invalid input data type!")
+            return res.status(400).send("Invalid input data type!")
         }
         let staffUsername = req.body.username;
         try {
@@ -1027,10 +1027,10 @@ app.get("/hrViewAttendance", verify, async (req, res) => {
             res.send(att);
         }
         catch (err) {
-            res.send(err);
+            res.status(400).send(err);
         }
     } else {
-        return res.send("You are not authorized to do this functionality");
+        return res.status(400).send("You are not authorized to do this functionality");
     }
 });
 
