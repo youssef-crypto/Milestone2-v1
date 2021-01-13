@@ -1,0 +1,373 @@
+###
+post http://localhost:3000/login
+Content-Type: application/json
+
+{
+    "username":"joe",
+    "password":"pass123"
+}
+
+###
+post http://localhost:3000/updateProfile
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpvZSIsInJvbGUiOiJBQyIsImlhdCI6MTYxMDM5MzI0OSwiZXhwIjoxNjEwMzk2ODQ5fQ.6fPGa1fy91Ra6DEBbuUcn8bfnz_HK7pczXzLZpxU1L4
+Content-Type: application/json
+
+{
+    "gender" : "male",
+    "displayName" : "Joeeeeeeee",
+    "imgPath" : "https://image.freepik.com/free-photo/double-exposure-image-business-profit-growth_31965-3022.jpg"
+}
+
+###
+put http://localhost:3000/resetPassword
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpvZSIsInJvbGUiOiJBQyIsImlhdCI6MTYxMDM5Njk2OCwiZXhwIjoxNjEwNDAwNTY4fQ.B4p0D1MJYQwtRKUhmmCOvIfXVWNikRIMmpLJ91oN-Rs
+Content-Type: application/json
+
+{
+    "oldPassword" : "pass321",
+    "newPassword" : "pass123"
+}
+
+
+###
+get http://localhost:3000/viewProfile
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpvZSIsInJvbGUiOiJBQyIsImlhdCI6MTYxMDM5MzI0OSwiZXhwIjoxNjEwMzk2ODQ5fQ.6fPGa1fy91Ra6DEBbuUcn8bfnz_HK7pczXzLZpxU1L4
+Content-Type: application/json
+
+
+###
+put http://localhost:3000/signInToCampus
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpvZSIsInJvbGUiOiJBQyIsImlhdCI6MTYxMDQwNTY4MCwiZXhwIjoxNjEwNDA5MjgwfQ.DOMCklzsabXymTapkHLQMpZs-PneirdutRyOwFHU4YE
+Content-Type: application/json
+
+###
+post http://localhost:3000/signOutFromCampus
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiQ0MiLCJpYXQiOjE2MDg4OTE3MzEsImV4cCI6MTYwODg5NTMzMX0.UyczLBVtYjoic4fEtl2XEsso3MMtWO-oA7fC0g_5v8g
+Content-Type: application/json
+
+###
+get http://localhost:3000/viewMissingExtraHours
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiSFIiLCJpYXQiOjE2MDg4OTkyNDMsImV4cCI6MTYwODkwMjg0M30.MWtVK8YaukBxghAA_rackPbLe1KImCdOrAoxwKbfM8M
+Content-Type: application/json
+
+###
+post http://localhost:3000/viewAttendanceByMonth
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpvZSIsInJvbGUiOiJBQyIsImlhdCI6MTYxMDQ1Nzk3MSwiZXhwIjoxNjEwNDYxNTcxfQ.QvGQGfQyEII604CBmbi35w3ZxVpB0BpJpHEGVIuB3JI
+Content-Type: application/json
+
+{
+    "month": "January"
+}
+
+###
+post http://localhost:3000/addSignInSignOut
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiSFIiLCJpYXQiOjE2MDg4OTc0NzQsImV4cCI6MTYwODkwMTA3NH0.aGA0z62yZZbrybzoGZYVanzLiTP1Yeb5IrMOaGiVnRs
+Content-Type: application/json
+
+{
+    "staffUsername": "mohamed.elsayedali2",
+    "signIn": "December 28, 2020 6:00:00",
+    "signOut": "December 28, 2020 22:00:00"
+}
+
+###
+post http://localhost:3000/logout
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpvZSIsInJvbGUiOiJBQyIsImlhdCI6MTYxMDQ3NzI5MCwiZXhwIjoxNjEwNDgwODkwfQ.wU8HJ7dVKTS4SOqpjajt3zO2A7hJSsAEsdVoa_7lWwo
+Content-Type: application/json
+
+###
+get http://localhost:3000/viewSchedule
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiSFIiLCJpYXQiOjE2MDg5MDQ1NTgsImV4cCI6MTYwODkwODE1OH0.78pk7IyC2HACoR4cM2LXwILMF7xcW5Qna3xO-rCRCuI
+Content-Type: application/json
+
+###
+get http://localhost:3000/viewSlotsOnDate
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaSIsInJvbGUiOiJDQyIsImlhdCI6MTYwODQ5ODE2OSwiZXhwIjoxNjA4NTAxNzY5fQ.RuQZfQJP8xYqjRTVSHAjPVcDBUFTzAES1BH_ljRNRmk
+Content-Type: application/json
+
+{
+    "date": "2020-12-21"
+}
+
+###
+post http://localhost:3000/assignToSlot
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiQ0kiLCJpYXQiOjE2MDg5MTY0MzksImV4cCI6MTYwODkyMDAzOX0.dAuNJdDqph-VUTnQ8_CX9K0LGIPhHkBoJXl9Th9V-UY
+Content-Type: application/json
+
+{
+    "course": "csen703",
+    "teacher": "teacher1",
+    "location": "C7.209",
+    "day": "Monday",
+    "start": "10:00",
+    "end": "11:30"
+}
+
+###
+post http://localhost:3000/sendReplacement
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiSFIiLCJpYXQiOjE2MDg5MDYyMTIsImV4cCI6MTYwODkwOTgxMn0.EQ15AE5aD-rokxnQdr7liyXQNZxfguivs-ynzvAD2oc
+Content-Type: application/json
+
+{
+  "senderDate":"2020-12-21",
+  "course": "",
+  "start": "",
+  "end": "",
+  "location": "",
+  "recipient": "mohamed.elsayedali2"
+}
+
+###
+get http://localhost:3000/viewSentRequests
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiQ0MiLCJpYXQiOjE2MDgzNDY5NTksImV4cCI6MTYwODM1MDU1OX0.WO30J6JRGSiSDGlPu1UtWkV6AMa-aFkyfMyPHDnr_vY
+Content-Type: application/json
+
+{
+    "type": "replacement",
+    "status": "P"
+}
+
+###
+get http://localhost:3000/viewReceivedReplacement
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiQ0MiLCJpYXQiOjE2MDgzMTk4MjgsImV4cCI6MTYwODMyMzQyOH0.oPR93qBh0TA1HBPX1LjOdOGOYhdX0Zbohw1YcOhMHgk
+Content-Type: application/json
+
+###
+post http://localhost:3000/rejectReplacement
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiQ0MiLCJpYXQiOjE2MDgzMTk4MjgsImV4cCI6MTYwODMyMzQyOH0.oPR93qBh0TA1HBPX1LjOdOGOYhdX0Zbohw1YcOhMHgk
+Content-Type: application/json
+
+{
+    "requestId": ""
+}
+
+###
+post http://localhost:3000/acceptReplacement
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiQ0MiLCJpYXQiOjE2MDgzMTk4MjgsImV4cCI6MTYwODMyMzQyOH0.oPR93qBh0TA1HBPX1LjOdOGOYhdX0Zbohw1YcOhMHgk
+Content-Type: application/json
+
+{
+    "requestId": ""
+}
+
+###
+get http://localhost:3000/viewCoursesInDepartment
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiQ0MiLCJpYXQiOjE2MDgzODkzNzUsImV4cCI6MTYwODM5Mjk3NX0.FfivLmR824KgbvfmCiT3CysOnSnglYb0ZXsagq4_GxM
+Content-Type: application/json
+
+###
+post http://localhost:3000/sendSlotLinking
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiQ0MiLCJpYXQiOjE2MDg0NjQxOTAsImV4cCI6MTYwODQ2Nzc5MH0.sOUWGarkuFGUDvOek8Q5e4SeOEyZuHcCxWqywoT5-IQ
+Content-Type: application/json
+
+{
+    "course": "",
+    "day": "",
+    "start": "",
+    "end": "",
+    "location": ""
+}
+
+###
+post http://localhost:3000/sendChangeDayOff
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiQ0MiLCJpYXQiOjE2MDgzNDY5NTksImV4cCI6MTYwODM1MDU1OX0.WO30J6JRGSiSDGlPu1UtWkV6AMa-aFkyfMyPHDnr_vY
+Content-Type: application/json
+
+{
+    "day": "Thursday",
+    "reason": "bla bla"
+}
+
+###
+post http://localhost:3000/sendAnnualRequest
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiSFIiLCJpYXQiOjE2MDg5MTA0OTEsImV4cCI6MTYwODkxNDA5MX0.Q0zDhdxTka_d5t8gZYyEWd0hCwi5lx1a75UdNRQNzUA
+Content-Type: application/json
+
+{
+    "date": "2020-12-26",
+    "reason": "bla bla",
+    "replacers": [
+        "7ad kda",
+        "7ad tany"
+    ]
+}
+
+###
+post http://localhost:3000/sendAccidentalRequest
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiSFIiLCJpYXQiOjE2MDg5MTA0OTEsImV4cCI6MTYwODkxNDA5MX0.Q0zDhdxTka_d5t8gZYyEWd0hCwi5lx1a75UdNRQNzUA
+Content-Type: application/json
+
+{
+    "date": "2020-12-19",
+    "reason": ""
+}
+
+###
+post http://localhost:3000/sendSickRequest
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaSIsInJvbGUiOiJDQyIsImlhdCI6MTYwODQ5ODE2OSwiZXhwIjoxNjA4NTAxNzY5fQ.RuQZfQJP8xYqjRTVSHAjPVcDBUFTzAES1BH_ljRNRmk
+Content-Type: application/json
+
+{
+    "date": "2020-12-16",
+    "reason": "",
+    "documents": [
+        "document1",
+        0
+    ]
+}
+
+###
+post http://localhost:3000/sendMaternityRequest
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiQ0MiLCJpYXQiOjE2MDg0MTA3OTksImV4cCI6MTYwODQxNDM5OX0.dIegEIBQu8fcWjtCnlwGr9rviH3fhYX6LE62ke2TuCA
+Content-Type: application/json
+
+{
+    "date": "2020-12-16",
+    "reason": "",
+    "documents": [
+        "document1",
+        "document2"
+    ]
+}
+
+###
+post http://localhost:3000/sendCompensationRequest
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaSIsInJvbGUiOiJDQyIsImlhdCI6MTYwODQ5ODE2OSwiZXhwIjoxNjA4NTAxNzY5fQ.RuQZfQJP8xYqjRTVSHAjPVcDBUFTzAES1BH_ljRNRmk
+Content-Type: application/json
+
+{
+    "absentDate": "2020-12-12",
+    "compensationDate": "2020-12-20",
+    "reason": ""
+}
+
+###
+get http://localhost:3000/getNotificationCount
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaSIsInJvbGUiOiJDQyIsImlhdCI6MTYwODQ5ODE2OSwiZXhwIjoxNjA4NTAxNzY5fQ.RuQZfQJP8xYqjRTVSHAjPVcDBUFTzAES1BH_ljRNRmk
+Content-Type: application/json
+
+###
+get http://localhost:3000/viewNotifications
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaSIsInJvbGUiOiJDQyIsImlhdCI6MTYwODQ5ODE2OSwiZXhwIjoxNjA4NTAxNzY5fQ.RuQZfQJP8xYqjRTVSHAjPVcDBUFTzAES1BH_ljRNRmk
+Content-Type: application/json
+
+###
+delete http://localhost:3000/cancelDayOffRequest
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaSIsInJvbGUiOiJDQyIsImlhdCI6MTYwODQ5ODE2OSwiZXhwIjoxNjA4NTAxNzY5fQ.RuQZfQJP8xYqjRTVSHAjPVcDBUFTzAES1BH_ljRNRmk
+Content-Type: application/json
+
+{
+    "requestId": "5fdd7827e915ce2ed476da03"
+}
+
+###
+delete http://localhost:3000/cancelSlotLinking
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaSIsInJvbGUiOiJDQyIsImlhdCI6MTYwODQ5ODE2OSwiZXhwIjoxNjA4NTAxNzY5fQ.RuQZfQJP8xYqjRTVSHAjPVcDBUFTzAES1BH_ljRNRmk
+Content-Type: application/json
+
+{
+    "requestId": "5fde13b4a48e2638ac1fbe5e"
+}
+
+###
+delete http://localhost:3000/cancelLeaveRequest
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaSIsInJvbGUiOiJDQyIsImlhdCI6MTYwODg2NTgxMywiZXhwIjoxNjA4ODY5NDEzfQ.7zDEhEJdnUAKfJMTAWlV7MNWgOenVxptQLxQlUvvSHI
+Content-Type: application/json
+
+{
+    "requestId": "5fe55866e2e65c0e80169388"
+}
+
+###
+delete http://localhost:3000/cancelReplaceRequest
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaSIsInJvbGUiOiJDQyIsImlhdCI6MTYwODQxOTI3MSwiZXhwIjoxNjA4NDIyODcxfQ.DpzWkLnz-4qVRsqHGAHKahnZwuUBBmxe2OjvkVw_ufo
+Content-Type: application/json
+
+{
+    "requestId": "5fde8a99ab8ae54378bfa41b"
+}
+
+###
+get http://localhost:3000/viewSlotLinkingRequests
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiSFIiLCJpYXQiOjE2MDg4OTkyNDMsImV4cCI6MTYwODkwMjg0M30.MWtVK8YaukBxghAA_rackPbLe1KImCdOrAoxwKbfM8M
+Content-Type: application/json
+
+###
+post http://localhost:3000/rejectSlotLinking
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaSIsInJvbGUiOiJDQyIsImlhdCI6MTYwODQ3NjY2NSwiZXhwIjoxNjA4NDgwMjY1fQ.7RRqPRfsur8TK3RNmabHq48XFMBZU96XELgJFVhhVUY
+Content-Type: application/json
+
+{
+    "requestId": "5fdf377e8fedba3350b43ebf"
+}
+
+###
+post http://localhost:3000/acceptSlotLinking
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiQ0MiLCJpYXQiOjE2MDg4NTk4MTEsImV4cCI6MTYwODg2MzQxMX0.UnIOkR067AUV2-2XGrP_FOqM5S1eOxyZeG3ssxNlulo
+Content-Type: application/json
+
+{
+    "requestId": "5fdf377e8fedba3350b43ebf"
+}
+
+###
+get http://localhost:3000/viewCoursesOfCoordinator
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTIiLCJyb2xlIjoiSFIiLCJpYXQiOjE2MDg4OTkyNDMsImV4cCI6MTYwODkwMjg0M30.MWtVK8YaukBxghAA_rackPbLe1KImCdOrAoxwKbfM8M
+Content-Type: application/json
+
+###
+post http://localhost:3000/addCourseSlot
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaSIsInJvbGUiOiJDQyIsImlhdCI6MTYwODg2MDA4MCwiZXhwIjoxNjA4ODYzNjgwfQ.onqgsvity7SsO57BTHZVeunkVeGst6bLcGkMMg9fgS0
+Content-Type: application/json
+
+{
+    "courseName": "csen703",
+    "day": "Wednesday",
+    "start": "8:15",
+    "end": "9:45",
+    "location": "c5.101"
+}
+
+###
+post http://localhost:3000/updateCourseSlot
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaSIsInJvbGUiOiJDQyIsImlhdCI6MTYwODg2MDA4MCwiZXhwIjoxNjA4ODYzNjgwfQ.onqgsvity7SsO57BTHZVeunkVeGst6bLcGkMMg9fgS0
+Content-Type: application/json
+
+{
+    "courseName": "csen703",
+    "oldLocation": "new2",
+    "oldSlotDay": "Wednesday",
+    "oldSlotStart": "8:15",
+    "newTeacher": "mohamed.elsayedali2",
+    "newLocation": "new2",
+    "newSlotDay": "Thursday",
+    "newSlotStart": "",
+    "newSlotEnd": ""
+}
+
+###
+delete http://localhost:3000/deleteCourseSlot
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaSIsInJvbGUiOiJDQyIsImlhdCI6MTYwODg2MDA4MCwiZXhwIjoxNjA4ODYzNjgwfQ.onqgsvity7SsO57BTHZVeunkVeGst6bLcGkMMg9fgS0
+Content-Type: application/json
+
+{
+    "courseName": "csen703",
+    "location": "new2",
+    "slotDay": "Thursday",
+    "slotStart": "8:15"
+}
+
+###
+post http://localhost:3000/addDepartment
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vaGFtZWQuZWxzYXllZGFsaTMiLCJyb2xlIjoiQ0MiLCJpYXQiOjE2MDgzMTAyNzQsImV4cCI6MTYwODMxMzg3NH0.mo27Z4A67P5Sb4b032qfUsUrNTJRIcZzwgJ7U7cVMu4
+Content-Type: application/json
+
+{
+    "facultyName": "fac1",
+    "departmentName": "dep3"
+}
+
+###
+get http://localhost:3000/
+auth-token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpvZSIsInJvbGUiOiJBQyIsImlhdCI6MTYxMDMwNDA1MSwiZXhwIjoxNjEwMzA3NjUxfQ.RFoh2MK_CUTJH7_Tk5jr_E-vqv-MYtLCoiiAlUQqGNA
+Content-Type: application/json
