@@ -157,8 +157,16 @@ app.get("/viewProfile", verify, async (req, res) => {
     let staffUsername = req.staff.username;
     //console.log(staffId);
     try {
-        let foundStaff = await Staff.findOne({ username: staffUsername }); +
-            res.send(foundStaff.profile);
+        let foundStaff = await Staff.findOne({ username: staffUsername });
+        const response = {
+            gender: foundStaff.profile.gender,
+            imgPath: foundStaff.profile.imgPath,
+            displayName: foundStaff.profile.displayName,
+            salary: foundStaff.salary,
+            missingDays: foundStaff.missingDays.length,
+            missingMinutes: foundStaff.missingMinutes
+        };
+        res.send(response);
     }
     catch (err) {
         res.send(err);
@@ -334,117 +342,127 @@ app.post("/hrAddStaff", verify, async (req, res) => {
     let staffRole = req.staff.role;
     if (staffRole == "HR") {
         let { username, password, role, gender, imgPath, displayName, salary, faculty, department,
-            courseName, officeLocation, dayOff } = req.body;
+            officeLocation, dayOff } = req.body;
         if (typeof username !== 'string' || typeof password !== 'string' || typeof role !== 'string' ||
-            typeof gender !== 'string' || typeof imgPath !== 'string' || typeof displayName !== 'string' ||
+            typeof gender !== 'string' || typeof displayName !== 'string' ||
             typeof officeLocation !== 'string' || typeof dayOff !== 'string' || typeof salary !== 'number'
             || typeof faculty !== 'string' || typeof department !== 'string') {
             return res.send("Invalid input data type!")
         }
-        const existStaff = await Staff.findOne({ username: username });
-        if (existStaff) {
-            return res.status(400).json({ message: "Username taken" });
-        }
-        const pass = (!password) ? "123456" : password;
-
-        if (courseName !== null) {
-            return res.send("you are not allowed to assign Courses to new staff!")
-        }
-        if (role == "HR") {
-            if (dayOff != "Saturday") {
-                return res.send("HR members always have Saturday as their dayOff!")
+        try {
+            const existStaff = await Staff.findOne({ username: username });
+            if (existStaff) {
+                return res.send("Username taken");
             }
-        }
-        const findLocation = await Location.findOne({ location_name: officeLocation });
-        if (!findLocation) {
-            return res.send("Location not found!");
-        }
-        if (findLocation.location_type !== "Office") {
-            return res.send("The following location is not an office!")
-        }
-        if (findLocation.occupiedPlaces >= findLocation.capacity) {
-            return res.send("The following location is full, please choose another one!")
-        } else {
-            findLocation.occupiedPlaces += 1
-        }
-        await Location.updateOne({ location_name: officeLocation },
-            { occupiedPlaces: findLocation.occupiedPlaces })
-        if (!role) {
-            return res.send("You have to specifiy the role!")
-        }
-        if (!faculty || !department) {
-            return res.send("You have to specifiy your faculty and department!")
-        }
-        if (!username) {
-            return res.status(400).json({ message: "Please Enter a Valid Username" });
-        }
-        if (!displayName) {
-            displayName = displayName;
-        }
-        if (!imgPath) {
-            if (gender == "male") {
-                imgPath = "https://www.pngitem.com/pimgs/m/504-5040528_empty-profile-picture-png-transparent-png.png";
-            }
-            else {
-                imgPath = "https://i.pinimg.com/originals/d1/ad/13/d1ad13605acd060cbcc4b334e2119883.png";
-            }
-        }
-        const count = await MemberCount.findOne({ id: 2020 })
-        let hrCount = count.hr
-        let acCount = count.ac
-        let ID;
+            const pass = (!password) ? "123456" : password;
 
-        if (role === "HR") {
-            ID = "hr-";
-            ID += hrCount.toString()
-            hrCount++
-        } else {
-            ID = "ac-";
-            ID += acCount.toString()
-            acCount++
-        }
-        await MemberCount.updateOne({ id: 2020 }, { "$set": { hr: hrCount, ac: acCount } })
+            if (role == "HR") {
+                if (dayOff != "Saturday") {
+                    return res.send("HR members always have Saturday as their dayOff!")
+                }
+            }
+            const findLocation = await Location.findOne({ location_name: officeLocation });
+            const findFaculty = await Faculty.findOne({ name: faculty });
+            if (findFaculty) {
+                const depart = findFaculty.department.find(dep => dep.name == department);
+                const depIndex = findFaculty.department.indexOf(depart);
+                if (depIndex == -1) {
+                    return res.send("There is no existing department with the name you entered");
+                }
+            } else {
+                return res.send("Faculty can not be found!")
+            }
+            if (!findLocation) {
+                return res.send("Location not found!");
+            }
+            if (findLocation.location_type !== "Office") {
+                return res.send("The following location is not an office!")
+            }
+            if (findLocation.occupiedPlaces >= findLocation.capacity) {
+                return res.send("The following location is full, please choose another one!")
+            } else {
+                findLocation.occupiedPlaces += 1
+            }
+            await Location.updateOne({ location_name: officeLocation },
+                { occupiedPlaces: findLocation.occupiedPlaces })
+            if (!role) {
+                return res.send("You have to specifiy the role!")
+            }
+            if (!faculty || !department) {
+                return res.send("You have to specifiy your faculty and department!")
+            }
+            if (!username) {
+                return res.send("Please Enter a Valid Username");
+            }
+            if (!displayName) {
+                displayName = displayName;
+            }
+            if (!imgPath) {
+                if (gender == "male") {
+                    imgPath = "https://www.pngitem.com/pimgs/m/504-5040528_empty-profile-picture-png-transparent-png.png";
+                }
+                else {
+                    imgPath = "https://i.pinimg.com/originals/d1/ad/13/d1ad13605acd060cbcc4b334e2119883.png";
+                }
+            }
+            const count = await MemberCount.findOne({ id: 2020 })
+            let hrCount = count.hr
+            let acCount = count.ac
+            let ID;
 
-        const salt = await bcrypt.genSalt();
-        const hashedPassword = await bcrypt.hash(pass, salt);
-        const newStaff = new Staff({
-            username: username,
-            email: username.concat("@guc.edu.eg"),
-            password: hashedPassword,
-            role: role,
-            id: ID,
-            profile: {
-                gender: gender,
-                displayName: displayName,
-                imgPath: imgPath
-            },
-            signedIn: false,
-            dayOff: dayOff,
-            salary: salary,
-            office: officeLocation,
-            attendance: [],
-            signIn: null,
-            minutes: 0,
-            missingMinutes: 0,
-            extraMinutes: 0,
-            missingDays: [],
-            courses: [],
-            schedule: [],
-            annualBalance: 2.5,
-            annualLastAdded: new Date(),
-            acciedntalDays: 6,
-            notifications: 0,
-            missingHours: 0,
-            extraHours: 0,
-            faculty: faculty,
-            department: department,
-            date: new Date()
-        });
-        newStaff.save()
-            .then(() => { res.send("Staff member is added") })
-            .catch((err) => { res.send(err) });
-    }
-    else {
+            if (role === "HR") {
+                ID = "hr-";
+                ID += hrCount.toString()
+                hrCount++
+            } else {
+                ID = "ac-";
+                ID += acCount.toString()
+                acCount++
+            }
+            await MemberCount.updateOne({ id: 2020 }, { "$set": { hr: hrCount, ac: acCount } })
+
+            const salt = await bcrypt.genSalt();
+            const hashedPassword = await bcrypt.hash(pass, salt);
+            const newStaff = new Staff({
+                username: username,
+                email: username.concat("@guc.edu.eg"),
+                password: hashedPassword,
+                role: role,
+                id: ID,
+                profile: {
+                    gender: gender,
+                    displayName: displayName,
+                    imgPath: imgPath
+                },
+                signedIn: false,
+                dayOff: dayOff,
+                salary: salary,
+                office: officeLocation,
+                attendance: [],
+                signIn: null,
+                minutes: 0,
+                missingMinutes: 0,
+                extraMinutes: 0,
+                missingDays: [],
+                courses: [],
+                schedule: [],
+                annualBalance: 2.5,
+                annualLastAdded: new Date(),
+                acciedntalDays: 6,
+                notifications: 0,
+                missingHours: 0,
+                extraHours: 0,
+                faculty: faculty,
+                department: department,
+                date: new Date()
+            });
+            newStaff.save()
+                .then(() => { res.send("Staff member is added") })
+                .catch((err) => { res.send(err) });
+        } catch (err) {
+            return res.status(400).json({ message: err.message })
+        }
+    } else {
         res.send("You are not authorized to add new staff members");
     }
 });
@@ -508,7 +526,7 @@ app.put("/hrUpdateLocation", verify, async (req, res) => {
             }
 
             const updatedLocation = res.findLocation.save()
-            return res.json({ message: 'Location is updated!' })
+            return res.send('Location is updated!')
 
         } catch (err) {
             return res.status(400).json({ message: err.message })
@@ -519,7 +537,7 @@ app.put("/hrUpdateLocation", verify, async (req, res) => {
 });
 
 //delete location
-app.delete("/hrDeleteLocation", verify, async (req, res) => {
+app.post("/hrDeleteLocation", verify, async (req, res) => {
     let staffRole = req.staff.role;
     if (staffRole == "HR") {
         if (typeof req.body.location_name !== 'string') {
@@ -536,7 +554,7 @@ app.delete("/hrDeleteLocation", verify, async (req, res) => {
         }
         try {
             await res.location.remove()
-            res.json({ message: 'Location is deleted' })
+            res.send('Location is deleted')
         } catch (err) {
             return res.status(500).json({ message: err.message })
         }
@@ -582,7 +600,7 @@ app.put("/hrUpdateFaculty", verify, async (req, res) => {
             const faculty = await Faculty.findOne({ name: req.body.facultyName });
             const existfaculty = await Faculty.findOne({ name: req.body.updatedName })
             if (faculty == null) {
-                return res.send({ message: 'Cannot find Faculty' })
+                return res.send('Cannot find Faculty')
             }
             if (existfaculty) {
                 return res.send("Faculty already exists")
@@ -602,7 +620,7 @@ app.put("/hrUpdateFaculty", verify, async (req, res) => {
 });
 
 //delete Faculty
-app.delete("/hrDeleteFaculty", verify, async (req, res) => {
+app.post("/hrDeleteFaculty", verify, async (req, res) => {
     let staffRole = req.staff.role;
     if (staffRole == "HR") {
         if (typeof req.body.facultyName !== 'string') {
@@ -611,7 +629,7 @@ app.delete("/hrDeleteFaculty", verify, async (req, res) => {
         try {
             let faculty = await Faculty.findOne({ name: req.body.facultyName })
             if (faculty == null) {
-                return res.status(404).json({ message: 'Cannot find Faculty' })
+                return res.send('Cannot find Faculty')
             }
             res.faculty = faculty
 
@@ -620,7 +638,7 @@ app.delete("/hrDeleteFaculty", verify, async (req, res) => {
         }
         try {
             await res.faculty.remove()
-            res.json({ message: 'Faculty deleted' })
+            res.send('Faculty deleted')
         } catch (err) {
             return res.status(500).json({ message: err.message })
         }
@@ -676,21 +694,24 @@ app.put("/hrUpdateDepartment", verify, async (req, res) => {
             //console.log(faculty);
             if (faculty) {
                 const depart = faculty.department.find(dep => dep.name == departmentName);
+                const newdepart = faculty.department.find(dep => dep.name == newdepartmentName);
                 //console.log(depart);
                 const depIndex = faculty.department.indexOf(depart);
+                const newdepIndex = faculty.department.indexOf(newdepart)
                 if (depIndex == -1) {
                     return res.send("There is no existing department with the name you entered");
-                }
-                else {
+                }if(newdepIndex == -1){
                     faculty.department[depIndex].name = newdepartmentName;
                     await Faculty.findOneAndUpdate({ name: facultyName }, { department: faculty.department });
+                }
+                else {
+                    return res.send("Department already exists")
                 }
                 return res.send("Department is updated");
             }
             else {
                 return res.send("There is no faculty with that name");
             }
-
         } catch (err) {
             return res.send("Something went wrong!")
         }
@@ -701,7 +722,7 @@ app.put("/hrUpdateDepartment", verify, async (req, res) => {
 });
 
 //delete department
-app.delete("/hrDeleteDepartment", verify, async (req, res) => {
+app.post("/hrDeleteDepartment", verify, async (req, res) => {
     const { username, role } = req.staff;
     if (role === "HR") {
         const { facultyName, departmentName } = req.body;
@@ -746,29 +767,36 @@ app.post("/hrAddCourse", verify, async (req, res) => {
             return res.send("Invalid input data type!")
         }
         try {
-            const faculty = await Faculty.findOne({ "department.name": departmentName });
+            const faculty = await Faculty.findOne({ name: facultyName });
             if (faculty) {
-                for (let i = 0; i < faculty.department.length; i++) {
-                    for (let j = 0; j < faculty.department[i].course.length; j++) {
-                        if (faculty.department[i].name === departmentName) {
-                            if (faculty.department[i].course[j].name !== courseName) {
-                                continue;
-                            } else {
-                                return res.send("The course already exists in that department!")
+                const depart = faculty.department.find(dep => dep.name == departmentName);
+                //console.log(depart);
+                const depIndex = faculty.department.indexOf(depart);
+                if (depIndex == -1) {
+                    return res.send("There is no existing department with the name you entered");
+                } else {
+                    for (let i = 0; i < faculty.department.length; i++) {
+                        for (let j = 0; j < faculty.department[i].course.length; j++) {
+                            if (faculty.department[i].name === departmentName) {
+                                if (faculty.department[i].course[j].name !== courseName) {
+                                    continue;
+                                } else {
+                                    return res.send("The course already exists in that department!")
+                                }
                             }
                         }
+                        faculty.department[i].course.push({
+                            name: courseName,
+                            instructor: [],
+                            slots: []
+                        })
+                        break;
                     }
-                    faculty.department[i].course.push({
-                        name: courseName,
-                        instructor: [],
-                        slots: []
-                    })
-                    break;
+                    await Faculty.findOneAndUpdate({ "department.name": departmentName }, { department: faculty.department });
+                    return res.send("A course is added")
                 }
-                await Faculty.findOneAndUpdate({ "department.name": departmentName }, { department: faculty.department });
-                return res.send("A course is added")
             } else {
-                return res.send("There is no existing department with the name you entered")
+                return res.send("There is no existing faculty with the name you entered")
             }
         } catch (err) {
             return res.send("Wrong data!")
@@ -800,13 +828,17 @@ app.put("/hrUpdateCourse", verify, async (req, res) => {
             else {
                 const findCourse = faculty.department[depIndex].course.find(course => course.name == courseName)
                 const courseIndex = faculty.department[depIndex].course.indexOf(findCourse)
+                const findNewCourse = faculty.department[depIndex].course.find(course => course.name == newCourseName)
+                const newcourseIndex = faculty.department[depIndex].course.indexOf(findNewCourse)
                 if (courseIndex == -1) {
                     return res.send("There is no course with that name")
-                }
-                else {
+                }if(newcourseIndex == -1){
                     faculty.department[depIndex].course[courseIndex].name = newCourseName;
                     await Faculty.findOneAndUpdate({ name: facultyName },
                         { department: faculty.department });
+                }
+                else {
+                    return res.send("The entered course already exists")
                 }
             }
             res.send("The course is updated");
@@ -821,7 +853,7 @@ app.put("/hrUpdateCourse", verify, async (req, res) => {
 });
 
 //delete course under department
-app.delete("/hrDeleteCourse", verify, async (req, res) => {
+app.post("/hrDeleteCourse", verify, async (req, res) => {
     const { username, role } = req.staff;
     const { facultyName, departmentName, courseName } = req.body;
     if (typeof facultyName !== 'string' || typeof departmentName !== 'string' || typeof courseName !== 'string') {
@@ -869,7 +901,7 @@ app.put("/hrUpdateSalary", verify, async (req, res) => {
         }
     if (staffRole == "HR") {
         if (staff == null) {
-            return res.send({ message: 'User not found' })
+            return res.send('User not found')
         }
         res.staff = staff
         res.staff.salary = req.body.newSalary
@@ -889,49 +921,76 @@ app.put("/hrUpdateStaff", verify, async (req, res) => {
     let staffRole = req.staff.role;
     if (staffRole == "HR") {
         if (typeof req.body.username !== 'string' || typeof req.body.oldOffice !== 'string' || typeof req.body.office !== 'string'
-            || typeof req.body.role !== 'string'|| typeof req.body.dayOff !== 'string'|| typeof req.body.faculty !== 'string'
-            || typeof req.body.department !== 'string'|| typeof req.body.gender !== 'string'|| typeof req.body.displayName !== 'string') {
+            || typeof req.body.role !== 'string' || typeof req.body.dayOff !== 'string' || typeof req.body.faculty !== 'string'
+            || typeof req.body.department !== 'string' || typeof req.body.gender !== 'string' || typeof req.body.displayName !== 'string') {
             return res.send("Invalid input data type!")
         }
         try {
             const findstaff = await Staff.findOne({ username: req.body.username })
+            const StaffLocation = await Staff.findOne({ office: req.body.oldOffice })
             const oldLocation = await Location.findOne({ location_name: req.body.oldOffice })
             const findLocation = await Location.findOne({ location_name: req.body.office })
+            const findFaculty = await Faculty.findOne({ name: req.body.faculty })
+            const count = await MemberCount.findOne({ id: 2020 })
+            let hrCount = count.hr
+            let acCount = count.ac
+            let ID;
             if (findstaff == null) {
-                return res.status(404).json({ message: 'Cannot find staff member' })
+                return res.send('Cannot find staff member')
+            }
+            if (!findFaculty) {
+                res.send("Faculty not found!")
+            } else {
+                const depart = findFaculty.department.find(dep => dep.name == req.body.department);
+                const depIndex = findFaculty.department.indexOf(depart);
+                if (depIndex == -1) {
+                    return res.send("There is no department with the name you entered in that faculty");
+                }
             }
             res.findstaff = findstaff
             if (req.body.dayOff != null) {
-                if (req.body.role == req.staff.role) {
-                    return res.send("you can't change your dayOff or other HRs dayOff")
+                if (req.body.role == "HR") {
+                    res.findstaff.dayOff = "Saturday"
                 }
                 else {
                     res.findstaff.dayOff = req.body.dayOff
                 }
             }
+            if (req.body.role == "HR" && req.body.role !== findstaff.role) {
+                ID = "hr-"
+                ID += hrCount.toString()
+                hrCount++
+                res.findstaff.id = ID
+            }
+            if (req.body.role != "HR" && req.body.role !== findstaff.role) {
+                ID = "ac-"
+                ID += acCount.toString()
+                acCount++
+                res.findstaff.id = ID
+            }
+            await MemberCount.updateOne({ id: 2020 }, { "$set": { hr: hrCount, ac: acCount } })
+
             if (findLocation == null || oldLocation == null) {
                 return res.send("Location not found!");
             }
-            if (findLocation.occupiedPlaces < findLocation.capacity) {
-                findLocation.occupiedPlaces += 1
-                oldLocation.occupiedPlaces -= 1
-                res.findstaff.office = req.body.office
+            if (StaffLocation) {
+                if ((findLocation.occupiedPlaces < findLocation.capacity) &&
+                    (findLocation.location_type === "Office") &&
+                    (req.body.office !== req.body.oldOffice)) {
+                    findLocation.occupiedPlaces += 1
+                    oldLocation.occupiedPlaces -= 1
+                    res.findstaff.office = req.body.office
+                }
             } else {
-                return res.send("Location is already full, please select another one!")
+                return res.send("Current location is not correct!")
             }
             await Location.updateOne({ location_name: req.body.office },
                 { occupiedPlaces: findLocation.occupiedPlaces })
             await Location.updateOne({ location_name: req.body.oldOffice },
                 { occupiedPlaces: oldLocation.occupiedPlaces })
 
-            if (req.body.email != null) {
-                res.findstaff.email = req.body.email
-            }
             if (req.body.role != null) {
                 res.findstaff.role = req.body.role
-            }
-            if (req.body.password != null) {
-                res.findstaff.password = req.body.password
             }
             if (req.body.department != null) {
                 res.findstaff.department = req.body.department
@@ -945,10 +1004,6 @@ app.put("/hrUpdateStaff", verify, async (req, res) => {
             if (req.body.displayName != null) {
                 res.findstaff.profile.displayName = req.body.displayName
             }
-            if (req.body.imgPath != null) {
-                res.findstaff.profile.imgPath = req.body.imgPath
-            }
-
             await res.findstaff.save()
             return res.send("Staff updated!")
         }
@@ -961,7 +1016,7 @@ app.put("/hrUpdateStaff", verify, async (req, res) => {
 });
 
 //delete staff
-app.delete("/hrDeleteStaff", verify, async (req, res) => {
+app.post("/hrDeleteStaff", verify, async (req, res) => {
     let staffRole = req.staff.role;
     if (staffRole == "HR") {
         try {
@@ -971,9 +1026,8 @@ app.delete("/hrDeleteStaff", verify, async (req, res) => {
             const findstaff = await Staff.findOne({ username: req.body.username })
             const findLocation = await Location.findOne({ location_name: req.body.officeName })
             if (findstaff == null) {
-                return res.status(404).json({ message: 'Cannot find staff member' })
+                return res.send('Cannot find staff member')
             }
-
             if (findstaff.office != req.body.officeName) {
                 return res.send("Wrong location!")
             }
@@ -986,7 +1040,7 @@ app.delete("/hrDeleteStaff", verify, async (req, res) => {
 
             res.findstaff = findstaff
             await res.findstaff.remove()
-            res.json({ message: 'Staff member deleted' })
+            res.send('Staff member deleted')
         } catch (err) {
             res.status(500).json({ message: err.message })
         }
@@ -1004,7 +1058,7 @@ app.get('/hrViewMissingHoursMissingDays', verify, async (req, res) => {
             const getstaff = foundStaff.filter(staff =>{
                 return staff.missingMinutes > 0 || staff.missingDays.length !== 0 
             });
-            res.json(getstaff)
+            res.send(getstaff)
         } catch (err) {
             res.json({ message: err.message })
         }
@@ -1088,7 +1142,7 @@ app.post("/hrAddSignInSignOut", verify, async (req, res) => {
                     signIn: signInDate,
                     signOut: signOutDate
                 });
-                await Staff.updateOne({username: username}, {"$set": {attendance: user.attendance, missingMinutes: user.missingMinutes, extraMinutes: user.extraMinutes}});
+                await Staff.updateOne({username: staffUsername}, {"$set": {attendance: user.attendance, missingMinutes: user.missingMinutes, extraMinutes: user.extraMinutes}});
                 res.send("Record added successfully");
             }
             else {
@@ -1104,21 +1158,31 @@ app.post("/hrAddSignInSignOut", verify, async (req, res) => {
 
 // { HOD Functionalities }
 
-app.get("/viewStaffInDepartment", verify, async (req, res) => { //view staff in the given department
-    if (req.staff.role !== "HR") {
-        const staff = await Staff.find({department: req.body.department});
-        res.send(staff);
+//DONE
+app.post("/viewStaffInDepartment", verify, async (req, res) => { //view staff in the given department
+    if (req.staff.role === "HOD") {
+        const dep = await Staff.findOne({username: req.staff.username})
+        const depName = dep.department
+        if(req.body.department===depName){
+            const staff = await Staff.find({department: req.body.department});
+            res.send(staff);
+        }else{
+            res.send("Please Enter A department as the department You Are In")
+        }
+        
     }
     else {
         res.send("You are not authorized to do this functionality");
     }
 });
 
+//DONE
 app.get("/viewDayOffAllStaff",verify,async(req,res)=>{
     if(req.staff.role == "HOD"){
         const x = []
         const staff = await Staff.find({});
-        const dep = await Staff.findById(req.staff.id)
+        const dep = await Staff.findOne({username: req.staff.username})
+        // res.send(req.staff);
         staff.forEach(st => {
             if(st.department== dep.department){
                 x.push({name: st.username, department: st.department, dayOff: st.dayOff})
@@ -1130,12 +1194,13 @@ app.get("/viewDayOffAllStaff",verify,async(req,res)=>{
     }
 })
 
-app.get("/viewDayOffSingleStaff",verify,async(req,res)=>{
+//DONE
+app.post("/viewDayOffSingleStaff",verify,async(req,res)=>{
     if(req.staff.role=="HOD"){
         if((typeof (req.body.username)) == 'string'){
         const x = []
         const staff = await Staff.find({});
-        const dep = await Staff.findById(req.staff.id)
+        const dep = await Staff.findOne({username: req.staff.username});
         staff.forEach(st=>{
             if(st.department===dep.department && st.username == req.body.username){
                 x.push({name: st.username, dayOff:st.dayOff})
@@ -1156,17 +1221,24 @@ app.get("/viewDayOffSingleStaff",verify,async(req,res)=>{
     
 })
 
+//DONE
 app.post("/assignCourseInstructor",verify,async (req,res)=>{
     if(req.staff.role=="HOD"){
         if((typeof (req.body.instructor)) == 'string' && (typeof (req.body.courseName)) == 'string'){
-            const acc = await Staff.findById(req.staff.id)
+            const acc = await Staff.findOne({username: req.staff.username});
             const dep = acc.department
             const hodFac = acc.faculty
             const fac = await Faculty.find({name: hodFac});
             const deps = []
             let found = false;
             let wantedCourse = [];
-            await Staff.findOneAndUpdate({username: req.body.instructor}, {role: "CI"})
+            const st = await Staff.findOne({username: req.body.instructor});
+            if(st==null){
+                res.send("could not find that instructor in the department")
+            }
+            if(st.department !=dep){
+                res.send("The given name is not in the department")
+            }
             fac[0].department.forEach(d=>{
                 if(d.name == dep){
                     const cos = [];
@@ -1187,6 +1259,9 @@ app.post("/assignCourseInstructor",verify,async (req,res)=>{
             if(!found){
                 res.send("sorry this course is not in the department of that HOD")
             }
+
+            await Staff.findOneAndUpdate({username: req.body.instructor}, {role: "CI"})
+            
             const newF = {name: fac[0].name,department: deps};
             const newFac = new Faculty(newF);
             Faculty.findOneAndUpdate({name: hodFac},{department:deps},(error,data)=>{
@@ -1207,70 +1282,86 @@ app.post("/assignCourseInstructor",verify,async (req,res)=>{
     }
 })
 
+//DONE
 app.post("/updateCourseInstructor",verify,async (req,res)=>{
     if(req.staff.role=="HOD"){
         if((typeof (req.body.instructor)) == 'string' && (typeof (req.body.courseName)) == 'string'){
-        const acc = await Staff.findById(req.staff.id)
-        const dep = acc.department
-        const hodFac = acc.faculty
-        const fac = await Faculty.find({name: hodFac});
-        const deps = []
-        let found = false;
-        let wantedCourse = [];
-        fac[0].department.forEach(d=>{
-            if(d.name == dep){
-                const cos = [];
-                d.course.forEach(c=>{
-                    if(c.name==req.body.courseName){
-                        found = true;
-                        cos.push({name: c.name, instructor: req.body.instructor,coordinator:c.coordinator,slots:c.slots})
-                        wantedCourse.push({name: c.name, instructor: req.body.instructor,coordinator:c.coordinator,slots:c.slots})
-                    }else{
-                        cos.push(c);
-                    }
-                })
-                deps.push({name: d.name,head: d.head,course:cos})
-            }else{
-                deps.push(d);
+            const acc = await Staff.findOne({username: req.staff.username});
+            const dep = acc.department
+            const hodFac = acc.faculty
+            const fac = await Faculty.find({name: hodFac});
+            const deps = []
+            let found = false;
+            let wantedCourse = [];
+            const st = await Staff.findOne({username: req.body.instructor});
+            if(st==null){
+                res.send("could not find that instructor in the department")
             }
-        })
-        if(!found){
-            res.send("sorry this course is not in the department of that HOD")
+            if(st.department !=dep){
+                res.send("The given name is not in the department")
+            }
+            fac[0].department.forEach(d=>{
+                if(d.name == dep){
+                    const cos = [];
+                    d.course.forEach(c=>{
+                        if(c.name==req.body.courseName){
+                            found = true;
+                            cos.push({name: c.name, instructor: req.body.instructor,coordinator:c.coordinator,slots:c.slots})
+                            wantedCourse.push({name: c.name, instructor: req.body.instructor,coordinator:c.coordinator,slots:c.slots})
+                        }else{
+                            cos.push(c);
+                        }
+                    })
+                    deps.push({name: d.name,head: d.head,course:cos})
+                }else{
+                    deps.push(d);
+                }
+            })
+            if(!found){
+                res.send("sorry this course is not in the department of that HOD")
+            }
+
+            await Staff.findOneAndUpdate({username: req.body.instructor}, {role: "CI"})
+            
+            const newF = {name: fac[0].name,department: deps};
+            const newFac = new Faculty(newF);
+            Faculty.findOneAndUpdate({name: hodFac},{department:deps},(error,data)=>{
+                if(error){
+                    console.log(error)
+                }else{
+                    console.log(data)
+                }
+            })
+            res.send(wantedCourse);
+            
+        }else{
+            res.send("Please Enter Strings in the courseName field and instructor field");
         }
-        const newF = {name: fac[0].name,department: deps};
-        const newFac = new Faculty(newF);
-        Faculty.findOneAndUpdate({name: hodFac},{department:deps},(error,data)=>{
-            if(error){
-                console.log(error)
-            }else{
-                console.log(data)
-            }
-        })
-        res.send(wantedCourse);
-    }else{
-        res.send("Please Enter A String in the courseName field and in the instructor field")
-    }
+        
     }else{
         res.send("You are not authorized to do this")
     }
 })
 
+//DONE
 app.post("/deleteCourseInstructor",verify,async (req,res)=>{
     if(req.staff.role=="HOD"){
         if((typeof (req.body.courseName)) == 'string'){
-        const acc = await Staff.findById(req.staff.id)
+        const acc = await Staff.findOne({username: req.staff.username});
         const dep = acc.department
         const hodFac = acc.faculty
         const fac = await Faculty.find({name: hodFac});
         const deps = []        
         let found = false;
         let wantedCourse = [];
+        let oldInstructor = "";
         fac[0].department.forEach(d=>{
             if(d.name == dep){
                 const cos = [];
                 d.course.forEach(c=>{
                     if(c.name==req.body.courseName){
                         found = true;
+                        oldInstructor = c.instructor;
                         cos.push({name: c.name, instructor: "",coordinator:c.coordinator,slots:c.slots})
                         wantedCourse.push({name: c.name, instructor: "",coordinator:c.coordinator,slots:c.slots})
                     }else{
@@ -1285,6 +1376,7 @@ app.post("/deleteCourseInstructor",verify,async (req,res)=>{
         if(!found){
             res.send("sorry this course is not in the department of that HOD")
         }
+        await Staff.findOneAndUpdate({username: oldInstructor}, {role: ""})
         const newF = {name: fac[0].name,department: deps};
         const newFac = new Faculty(newF);
         Faculty.findOneAndUpdate({name: hodFac},{department:deps},(error,data)=>{
@@ -1303,49 +1395,40 @@ app.post("/deleteCourseInstructor",verify,async (req,res)=>{
     }
 })
 
-app.get("/viewRequests",verify, async(req,res)=>{
-    if(req.staff.role=="HOD"){
-        const acc = await Staff.findById(req.staff.id)
-        const dep = acc.department
-        const hodFac = acc.faculty
-        const fac = await Faculty.find({name: hodFac});
-        const hodName = acc.username
-        const deps = fac[0].department
-        let hodDep = {}
-        deps.forEach((d)=>{if(d.name==dep){hodDep = d}});
-        let hodStaff = [];
-        hodDep.course.forEach((c)=>{
-            hodStaff.push(c.coordinator);
-            hodStaff.push(c.instructor);
-            c.slots.forEach((slot)=>{
-                hodStaff.push(slot.teacher);
-            })
-        })
 
-        let leaveRequestsArray = [];
-        const leaveRequests = await LeaveRequest.find({});
-        leaveRequests.forEach((leave)=>{
-            hodStaff.forEach((hodS)=>{
-                if(hodS==leave.sender && hodName == leave.recipient){
-                    leaveRequestsArray.push(leave);
-                }
-            })
-        })
-        let dayOffRequestsArray = [];
-        const dayOffRequests = await DayOffRequest.find({});
-        dayOffRequests.forEach((day)=>{
-            hodStaff.forEach((hodS)=>{
-                if(hodS==day.sender && hodName==day.recipient){
-                    dayOffRequestsArray.push(day);
-                    // console.log(day);
-                }
-            })
-            
-        })
-        let requestsCombined = [];
-        requestsCombined.push(leaveRequestsArray);
-        requestsCombined.push(dayOffRequestsArray)
-        res.send(requestsCombined);
+//DONE
+app.get("/viewLeaveRequests",verify, async(req,res)=>{
+    if(req.staff.role=="HOD"){
+        // const acc = await Staff.findOne({username: req.staff.username});
+        // const dep = acc.department
+        // const hodFac = acc.faculty
+        // const fac = await Faculty.find({name: hodFac});
+        // const hodName = acc.username
+        // const deps = fac[0].department
+        // let hodDep = {}
+        // deps.forEach((d)=>{if(d.name==dep){hodDep = d}});
+        // let hodStaff = [];
+        // hodDep.course.forEach((c)=>{
+        //     hodStaff.push(c.coordinator);
+        //     hodStaff.push(c.instructor);
+        //     c.slots.forEach((slot)=>{
+        //         hodStaff.push(slot.teacher);
+        //     })
+        // })
+
+        
+        
+        // leaveRequests.forEach((leave)=>{
+        //     hodStaff.forEach((hodS)=>{
+        //         if(hodS==leave.sender && hodName == leave.recipient){
+        //             leaveRequestsArray.push(leave);
+        //         }
+        //     })
+        // })
+
+        const leaveRequests = await LeaveRequest.find({recipient: req.staff.username});
+        
+        res.send(leaveRequests);
         
 
     }else{
@@ -1354,9 +1437,50 @@ app.get("/viewRequests",verify, async(req,res)=>{
     
 })
 
+//DONE
+app.get("/viewDayOffRequests",verify, async(req,res)=>{
+    if(req.staff.role=="HOD"){
+        // const acc = await Staff.findOne({username: req.staff.username});
+        // const dep = acc.department
+        // const hodFac = acc.faculty
+        // const fac = await Faculty.find({name: hodFac});
+        // const hodName = acc.username
+        // const deps = fac[0].department
+        // let hodDep = {}
+        // deps.forEach((d)=>{if(d.name==dep){hodDep = d}});
+        // let hodStaff = [];
+        // hodDep.course.forEach((c)=>{
+        //     hodStaff.push(c.coordinator);
+        //     hodStaff.push(c.instructor);
+        //     c.slots.forEach((slot)=>{
+        //         hodStaff.push(slot.teacher);
+        //     })
+        // })
+
+        // let dayOffRequestsArray = [];
+        // const dayOffRequests = await DayOffRequest.find({});
+        // dayOffRequests.forEach((day)=>{
+        //     hodStaff.forEach((hodS)=>{
+        //         if(hodS==day.sender && hodName==day.recipient){
+        //             dayOffRequestsArray.push(day);
+        //             // console.log(day);
+        //         }
+        //     })
+        // })
+        const dayOffRequests = await DayOffRequest.find({recipient: req.staff.username})
+        res.send(dayOffRequests);
+        
+
+    }else{
+        res.send("You are not authorized to view the requests")
+    }
+    
+})
+
+//DONE
 app.get("/viewTeachingAssignments",verify,async(req,res)=>{
     if(req.staff.role=="HOD"){
-        const acc = await Staff.findById(req.staff.id)
+        const acc = await Staff.findOne({username: req.staff.username});
         const dep = acc.department
         const hodFac = acc.faculty
         const fac = await Faculty.find({name: hodFac});
@@ -1381,9 +1505,10 @@ app.get("/viewTeachingAssignments",verify,async(req,res)=>{
     }
 })
 
+//DONE
 app.get("/viewCoursesCoverage",verify,async(req,res)=>{
     if(req.staff.role=="HOD"){
-        const acc = await Staff.findById(req.staff.id)
+        const acc = await Staff.findOne({username: req.staff.username});
         const dep = acc.department
         const hodFac = acc.faculty
         const fac = await Faculty.find({name: hodFac});
@@ -1415,6 +1540,7 @@ app.get("/viewCoursesCoverage",verify,async(req,res)=>{
     }
 })
 
+//DONE
 app.post("/rejectDayOffRequest",verify,async(req,res)=>{
     if(req.staff.role == "HOD"){
        
@@ -1444,7 +1570,7 @@ app.post("/rejectDayOffRequest",verify,async(req,res)=>{
         res.send("You are not authorized to reject day off requests")
     }
 })
-
+//DONE
 app.post("/rejectLeaveRequest",verify,async(req,res)=>{
     if(req.staff.role == "HOD"){
         if((typeof (req.body.id)) == 'string' && (typeof (req.body.rejectionReason)) == 'string'){
@@ -1473,6 +1599,7 @@ app.post("/rejectLeaveRequest",verify,async(req,res)=>{
     }
 })
 
+//DONE
 app.post("/acceptDayOffRequest",verify,async(req,res)=>{
     if(req.staff.role=="HOD"){
         if((typeof (req.body.id)) == 'string' ){
@@ -1511,6 +1638,7 @@ app.post("/acceptDayOffRequest",verify,async(req,res)=>{
     }
 })
 
+//DONE
 app.post("/acceptLeaveRequest",verify,async(req,res)=>{
     if(req.staff.role=="HOD"){
         if((typeof (req.body.id)) == 'string'){
@@ -1573,12 +1701,46 @@ app.post("/acceptLeaveRequest",verify,async(req,res)=>{
 
 // { Course instructor Functionalities }
 
-    app.get("/viewSlotsAssignment", verify, async (req, res) => {
+app.post("/viewStaffInCourseProfile", verify, async (req, res) => { //view staff teaching the given course
+    const { username, role } = req.staff;
+    const { course } = req.body;
+    if (role !== "HR") {
+        if (typeof course !== 'string') {
+            return res.send("course is not valid");
+        }
+        const staff = await Staff.find({courses: course});
+        const staffEdited = [];
+        staff.forEach(person => {
+            if (person.username !== username) {
+                staffEdited.push(person);
+            }
+        });
+        res.send(staffEdited);
+    }
+    else {
+        res.send("You are not authorized to do this functionality");
+    }
+});
+
+app.get("/viewStaffInDepartmentProfile", verify, async (req, res) => { //view staff in the given department
+    if (req.staff.role !== "HR") {
+        const staff = await Staff.findOne({username: req.staff.username});
+        const dep = staff.department;
+        console.log(dep);
+        const result = await Staff.find({department: dep});
+        res.send(result);
+    }
+    else {
+        res.send("You are not authorized to do this functionality");
+    }
+});
+
+    app.post("/viewSlotsAssignment", verify, async (req, res) => {
         if(req.staff.role === "CI")
         {
             let instructorName = req.staff.username;
             let courseR = req.body.course;
-            if(typeof courseR !== 'string')
+            if(typeof courseR !== 'string' || courseR === "")
             {
                 res.send("Please enter the correct data.");
             }
@@ -1615,12 +1777,12 @@ app.post("/acceptLeaveRequest",verify,async(req,res)=>{
         }
     });
     
-    app.get("/viewCourseCoverage", verify, async (req, res) => {
+    app.post("/viewCourseCoverage", verify, async (req, res) => {
         let instructorName = req.staff.username;
         if(req.staff.role === "CI")
         {
             let courseName = req.body.course;
-            if(typeof courseName !== 'string')
+            if(typeof courseName !== 'string' || courseName === "")
             {
                 res.send("Please enter the correct data.");
             }
@@ -1660,7 +1822,7 @@ app.post("/acceptLeaveRequest",verify,async(req,res)=>{
         let coordinatorName = req.body.coordinatorName;
         if(req.staff.role === "CI")
         {
-            if(typeof course !== 'string' || typeof coordinatorName !== 'string')
+            if(typeof course !== 'string' || course === "" || typeof coordinatorName !== 'string' || coordinatorName === "")
             {
                 res.send("Please enter the correct data.");
             }
@@ -1689,12 +1851,12 @@ app.post("/acceptLeaveRequest",verify,async(req,res)=>{
         }
     });
     
-    app.get("/viewUnassignedSlots", verify, async (req, res) => {
+    app.post("/viewUnassignedSlots", verify, async (req, res) => {
         let instructorName = req.staff.username;
         let course = req.body.course;
         if(req.staff.role === "CI")
         {
-            if(typeof course !== 'string')
+            if(typeof course !== 'string' || course === "")
             {
                 res.send("Please enter the correct data.");
             }
@@ -1727,12 +1889,12 @@ app.post("/acceptLeaveRequest",verify,async(req,res)=>{
         }
     });
     
-    app.get("/viewAssignedSlots", verify, async (req, res) => {
+    app.post("/viewAssignedSlots", verify, async (req, res) => {
         let instructorName = req.staff.username;
         let course = req.body.course;
         if(req.staff.role === "CI")
         {
-            if(typeof course !== 'string')
+            if(typeof course !== 'string' || course === "")
             {
                 res.send("Please enter the correct data.");
             }
@@ -1770,7 +1932,7 @@ app.post("/acceptLeaveRequest",verify,async(req,res)=>{
         let courseName = req.body.course;
         if(req.staff.role !== "HR")
         {
-            if(typeof courseName !== 'string')
+            if(typeof courseName !== 'string' || courseName === "")
             {
                 res.send("Please enter the correct data.");
             }
@@ -1800,17 +1962,24 @@ app.post("/acceptLeaveRequest",verify,async(req,res)=>{
         {
             let teacherName = req.body.teacher;
             let courseName = req.body.course;
-            if(typeof teacherName !== 'string' || typeof courseName !== 'string')
+            if(typeof teacherName !== 'string' || teacherName === "" || typeof courseName !== 'string' || courseName === "")
             {
                 res.send("Please enter the correct data.");
             }
             else
             {
                 let teacherRecord = await Staff.findOne({username : teacherName});
-                let newCourses = teacherRecord.courses;
+                if(!teacherRecord)
+                {
+                    res.send("Please enter the correct username.");
+                }
+                else
+                {
+                    let newCourses = teacherRecord.courses;
                 newCourses.push(courseName);
                 await Staff.updateOne({username : teacherName}, {courses : newCourses});
                 res.send("Academic member has been successfully added to your course.");
+                }
             }
         }
         else
@@ -1830,8 +1999,10 @@ app.post("/acceptLeaveRequest",verify,async(req,res)=>{
     
         if(req.staff.role === "CI")
         {
-            if(typeof courseS !== 'string' || typeof assignedTeacher !== 'string' || typeof locationS !== 'string'
-            || typeof dayS !== 'string' || typeof startS !== 'string' || typeof endS !== 'string')
+            if(typeof courseS !== 'string' || courseS === "" || typeof assignedTeacher !== 'string' || assignedTeacher === ""
+            || typeof locationS !== 'string' || locationS === ""
+            || typeof dayS !== 'string' || dayS === "" 
+            || typeof startS !== 'string' || startS === "" || typeof endS !== 'string' || endS === "")
             {
                 res.send("Please enter the correct data.");
             }
@@ -1901,7 +2072,7 @@ app.post("/acceptLeaveRequest",verify,async(req,res)=>{
         }
     });
     
-    app.delete("/removeSlotAssignment", verify, async (req, res) => {
+    app.post("/removeSlotAssignment", verify, async (req, res) => {
         let instructorName = req.staff.username;
         let courseS = req.body.course;
         let assignedTeacher = req.body.teacher;
@@ -1912,8 +2083,10 @@ app.post("/acceptLeaveRequest",verify,async(req,res)=>{
         let result = [];
         if(req.staff.role === "CI")
         {
-            if(typeof courseS !== 'string' || typeof assignedTeacher !== 'string' || typeof locationS !== 'string'
-            || typeof dayS !== 'string' || typeof startS !== 'string' || typeof endS !== 'string')
+            if(typeof courseS !== 'string' || courseS === "" || typeof assignedTeacher !== 'string' || assignedTeacher === ""
+            || typeof locationS !== 'string' || locationS === ""
+            || typeof dayS !== 'string' || dayS === ""
+            || typeof startS !== 'string' || startS === "" || typeof endS !== 'string' || endS === "")
             {
                 res.send("Please enter the correct data.");
             }
@@ -1985,8 +2158,10 @@ app.post("/acceptLeaveRequest",verify,async(req,res)=>{
     
         if(req.staff.role === "CI")
         {
-            if(typeof courseS !== 'string' || typeof oldTeacher !== 'string' || typeof newTeacher !== 'string' || typeof locationS !== 'string'
-            || typeof dayS !== 'string' || typeof startS !== 'string' || typeof endS !== 'string')
+            if(typeof courseS !== 'string' || courseS === "" || typeof oldTeacher !== 'string' || oldTeacher === "" 
+            || typeof newTeacher !== 'string' || newTeacher === "" || typeof locationS !== 'string' || locationS === ""
+            || typeof dayS !== 'string' || dayS === "" || typeof startS !== 'string' || startS === "" 
+            || typeof endS !== 'string' || endS === "")
             {
                 res.send("Please enter the correct data.");
             }
@@ -1994,7 +2169,7 @@ app.post("/acceptLeaveRequest",verify,async(req,res)=>{
             {
                 if(oldTeacher === newTeacher)
                 {
-                    res.send("Please choose two different teachers.");
+                    res.send("The teacher you have chosen already teaches this slot.");
                 }
                 else
                 {
@@ -2413,7 +2588,7 @@ app.post("/updateCourseSlot", verify, async (req, res) => {
     }
 });
 
-app.delete("/deleteCourseSlot", verify, async (req, res) => {
+app.post("/deleteCourseSlot", verify, async (req, res) => {
     const { username, role } = req.staff;
     const { courseName, location, slotDay, slotStart } = req.body;
     if (role === "CC") {
@@ -2500,7 +2675,7 @@ app.get("/viewSchedule", verify, async (req, res) => {
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // also validates date given
-app.get("/viewSlotsOnDate", verify, async (req, res) => {
+app.post("/viewSlotsOnDate", verify, async (req, res) => {
     const { username, role } = req.staff;
     if (role !== "HR") {
         const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -2540,7 +2715,7 @@ app.get("/viewSlotsOnDate", verify, async (req, res) => {
 });
 
 // from above slots we choose a slot and pass course name here
-app.get("/viewStaffInCourse", verify, async (req, res) => { //view staff teaching the given course
+app.post("/viewStaffInCourse", verify, async (req, res) => { //view staff teaching the given course
     const { username, role } = req.staff;
     const { course } = req.body;
     if (role !== "HR") {
@@ -2595,7 +2770,7 @@ app.post("/sendReplacement", verify, async (req, res) => {
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // choose from drop-down list the type of request
-app.get("/viewSentRequests", verify, async (req, res) => {
+app.post("/viewSentRequests", verify, async (req, res) => {
     const { username, role } = req.staff;
     const { type, status } = req.body;
     if (role !== "HR") {
@@ -2632,7 +2807,7 @@ app.get("/viewSentRequests", verify, async (req, res) => {
                 requests = await LeaveRequest.find({ sender: username });
             }
             else {
-                requests = await LeaveRequest.find({ sender: username, status: status });
+                requests = await LeaveRequest.find({ sender: username, status: status, type: type });
             }
         }
         res.send(requests);
@@ -3133,7 +3308,7 @@ app.get("/viewNotifications", verify, async (req, res) => {
 });
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-app.delete("/cancelDayOffRequest", verify, async (req, res) => {
+app.post("/cancelDayOffRequest", verify, async (req, res) => {
     const { username, role } = req.staff;
     const { requestId } = req.body;
     if (role !== "HR") {
@@ -3157,7 +3332,7 @@ app.delete("/cancelDayOffRequest", verify, async (req, res) => {
     }
 });
 
-app.delete("/cancelSlotLinking", verify, async (req, res) => {
+app.post("/cancelSlotLinking", verify, async (req, res) => {
     const { username, role } = req.staff;
     const { requestId } = req.body;
     if (role !== "HR") {
@@ -3181,7 +3356,7 @@ app.delete("/cancelSlotLinking", verify, async (req, res) => {
     }
 });
 
-app.delete("/cancelLeaveRequest", verify, async (req, res) => {
+app.post("/cancelLeaveRequest", verify, async (req, res) => {
     const { username, role } = req.staff;
     const { requestId } = req.body;
     if (role !== "HR") {
@@ -3203,7 +3378,7 @@ app.delete("/cancelLeaveRequest", verify, async (req, res) => {
     }
 });
 
-app.delete("/cancelReplaceRequest", verify, async (req, res) => {
+app.post("/cancelReplaceRequest", verify, async (req, res) => {
     const { username, role } = req.staff;
     const { requestId } = req.body;
     if (role !== "HR") {
